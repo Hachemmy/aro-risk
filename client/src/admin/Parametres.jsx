@@ -1,0 +1,187 @@
+import { useEffect, useState } from 'react';
+import { api } from '../lib/api.js';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Onglet 3 — Paramètres techniques (menu minimaliste, 3 onglets max).
+// Outils : purge de rétention, régénération du jeu de démo, export CSV,
+// rappel des mesures d'anonymat actives côté serveur.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ANON_MEASURES = [
+  'Aucune adresse IP persistée : les compteurs anti-abus sont éphémères, en RAM uniquement.',
+  'Aucun pistage de cookie : un seul cookie HttpOnly SameSite=Lax (session console, 2 h max).',
+  'Aucune indexation : en-têtes X-Robots-Tag noindex, nofollow, noarchive sur toutes les réponses.',
+  'Aucune persistance locale : le stockage du navigateur (localStorage/IndexedDB) n\'est jamais utilisé.',
+  'En-têtes no-store + no-referrer : rien des écrans ne reste sur un appareil partagé.',
+  'Base de données : uniquement { types, plateformes, région, horodatage, gravité } + récit chiffré AES-256-GCM.',
+];
+
+export default function Parametres() {
+  const [busy, setBusy] = useState(null);
+  const [msg, setMsg] = useState(null);
+  const [db, setDb] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    api.admin('/db-info').then(setDb).catch(() => setDb(null));
+  }, []);
+
+  async function copyPath() {
+    try {
+      await navigator.clipboard.writeText(db?.hostPath || 'C:\\Risk\\server\\data\\aro.sqlite');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { /* presse-papiers indisponible */ }
+  }
+
+  async function run(label, fn) {
+    setBusy(label);
+    setMsg(null);
+    try {
+      const res = await fn();
+      setMsg({ ok: true, text: typeof res === 'string' ? res : JSON.stringify(res) });
+    } catch (e) {
+      setMsg({ ok: false, text: e.message || 'Erreur inconnue.' });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {msg && (
+        <p className={'rounded-xl p-3 text-sm ring-1 ' + (msg.ok
+          ? 'bg-green-50 text-green-800 ring-green-200'
+          : 'bg-red-50 text-red-700 ring-red-200')}>
+          {msg.text}
+        </p>
+      )}
+
+      {/* Base de données : emplacement réel + sauvegarde */}
+      <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-100">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-bold text-ink">🗄️ Base de données — où est-elle ?</h2>
+          <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-700 ring-1 ring-brand-100">
+            moteur : {db?.engine ?? '…'}
+          </span>
+        </div>
+        <p className="mt-1 text-xs leading-relaxed text-ink/60">
+          Tout est stocké dans un fichier unique, sur ta machine — rien dans le cloud.
+        </p>
+
+        <div className="mt-3 rounded-xl bg-ink/[0.04] p-3">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-ink/50">Chemin sur ton ordinateur</p>
+          <code className="mt-1 block break-all font-mono text-sm font-bold text-brand-800">
+            {db?.hostPath ?? 'C:\\Risk\\server\\data\\aro.sqlite'}
+          </code>
+          <p className="mt-1 text-[11px] text-ink/50">
+            Clé de chiffrement : <span className="font-mono">{db?.keyHostPath ?? 'C:\\Risk\\server\\data\\.textkey'}</span>
+            {db && (db.keyExists ? ' ✅ présente' : ' ⚠️ absente')}
+          </p>
+          {db?.inDocker && (
+            <p className="mt-1 text-[11px] text-ink/50">
+              Dans le conteneur, ce même dossier est monté — chemin interne : <span className="font-mono">{db.containerPath}</span>
+            </p>
+          )}
+        </div>
+
+        <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-xl bg-brand-50 p-2">
+            <dt className="text-[10px] font-bold uppercase tracking-wide text-ink/50">Signalements</dt>
+            <dd className="text-xl font-bold text-brand-800">{db?.reports ?? '—'}</dd>
+          </div>
+          <div className="rounded-xl bg-brand-50 p-2">
+            <dt className="text-[10px] font-bold uppercase tracking-wide text-ink/50">Alertes</dt>
+            <dd className="text-xl font-bold text-brand-800">{db?.alerts ?? '—'}</dd>
+          </div>
+          <div className="rounded-xl bg-brand-50 p-2">
+            <dt className="text-[10px] font-bold uppercase tracking-wide text-ink/50">Taille</dt>
+            <dd className="text-xl font-bold text-brand-800">
+              {db ? (db.sizeBytes / 1024).toFixed(0) + ' Ko' : '—'}
+            </dd>
+          </div>
+        </dl>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <a href="/api/admin/db-backup" download
+             className="rounded-full bg-brand-700 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800">
+            ⬇️ Télécharger une copie
+          </a>
+          <button type="button" onClick={copyPath}
+            className="rounded-full bg-brand-50 px-4 py-2 text-sm font-bold text-brand-700 ring-1 ring-brand-100 hover:bg-brand-100">
+            {copied ? '✓ Chemin copié' : '📋 Copier le chemin'}
+          </button>
+        </div>
+        <p className="mt-2 text-[11px] leading-relaxed text-ink/50">
+          Astuce Windows : appuie sur <kbd className="rounded bg-white px-1 ring-1 ring-brand-100">Win + R</kbd>,
+          colle <span className="font-mono">C:\Risk\server\data</span> et valide — le dossier s'ouvre dans l'Explorateur.
+          Le fichier <span className="font-mono">.textkey</span> est masqué par Windows : active « Éléments masqués ».
+        </p>
+      </section>
+
+      {/* Rétention & purge */}
+      <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-100">
+        <h2 className="text-lg font-bold text-ink">Rétention des données anonymes</h2>
+        <p className="mt-1 text-xs leading-relaxed text-ink/60">
+          Le cahier des charges impose un stockage minimum. Purger les signalements les plus âgés garde la base utile et réduit tout risque futur.
+          Valeur recommandée en production : 30 jours.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {[7, 30, 90].map((d) => (
+            <button key={d} type="button" disabled={busy !== null}
+              onClick={() => run('purge', () => api.adminPost('/purge', { days: d }).then((r) => `${r.deleted.reports} signalement(s) et ${r.deleted.alerts} alerte(s) supprimés (rétention ${d} j).`))}
+              className="rounded-full bg-brand-700 px-4 py-1.5 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-50">
+              Purger &gt; {d} jours
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Démo */}
+      <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-100">
+        <h2 className="text-lg font-bold text-ink">Démonstration</h2>
+        <p className="mt-1 text-xs leading-relaxed text-ink/60">
+          Régénérer un jeu de signalements anonymes plausibles sur 14 jours — recharge la carte thermique, le donut et le journal.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button type="button" disabled={busy !== null}
+            onClick={() => run('seed', () => api.adminPost('/demo-reseed', {}).then(() => 'Jeu de démonstration régénéré.'))}
+            className="rounded-full bg-sand px-4 py-1.5 text-sm font-bold text-brand-800 ring-1 ring-amber-200 hover:bg-amber-100 disabled:opacity-50">
+            {busy === 'seed' ? 'Régénération…' : 'Régénérer la démo'}
+          </button>
+          <a href="/api/admin/export" download="aro-anonyme.csv" target="_blank" rel="noreferrer"
+             className="rounded-full bg-brand-50 px-4 py-1.5 text-sm font-bold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-100">
+            ⤓ Export CSV (anonyme)
+          </a>
+        </div>
+      </section>
+
+      {/* Mesures d'anonymat */}
+      <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-100">
+        <h2 className="text-lg font-bold text-ink">Mesures d'anonymat actives (serveur)</h2>
+        <ul className="mt-2 space-y-1.5 text-sm text-ink/75">
+          {ANON_MEASURES.map((m) => (
+            <li key={m} className="flex gap-2">
+              <span className="mt-0.5 shrink-0 text-green-600">✔</span>
+              <span>{m}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 rounded-lg bg-brand-50 p-3 text-xs leading-relaxed text-brand-800 ring-1 ring-brand-100">
+          Clé du récit chiffré : stockée hors base (fichier <code className="font-mono">server/data/.textkey</code>) — même en cas de fuite de la base, les récits restent illisibles. Pour la production : secret manager (vault), HTTPS obligatoire + HSTS.
+        </p>
+      </section>
+
+      {/* Relais externes */}
+      <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-100">
+        <h2 className="text-lg font-bold text-ink">Relais externes (alertes)</h2>
+        <ul className="mt-2 space-y-1.5 text-sm text-ink/75">
+          <li>🔁 <strong>Escalade automatique</strong> — cas « gravité ≥ 3 » (chantage, sextorsion, revenge porn + seconde catégorie).</li>
+          <li>📮 <strong>Destinataires simulés</strong> — Bureau Anti-Cybercrime — SNCT · Ligne Verte Nationale (prototype : envoi mocké).</li>
+          <li>🔍 <strong>Vérificabilité</strong> — <code className="font-mono text-xs">GET /api/admin/alerts/:id/status</code> donne l'état exact de transmission.</li>
+          <li>🚫 <strong>Aucune donnée personnelle</strong> n'accompagne une alerte : région + type + gravité uniquement.</li>
+        </ul>
+      </section>
+    </div>
+  );
+}

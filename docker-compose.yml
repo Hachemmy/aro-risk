@@ -1,0 +1,24 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# ARO — Compose simplifié : UN SEUL conteneur construit par le Dockerfile racine
+# (frontend React + API Express + base SQLite dans le même conteneur).
+# Démarrage :  docker compose up --build -d   →  http://localhost:8080
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+
+  aro:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aro
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "8080"
+      # Identifiants console administrateur (change-les avant une vraie mise en ligne)
+      ARO_ADMIN_USER: "aro.admin"
+      ARO_ADMIN_PASSWORD: "AroDemo2026!"
+    ports:
+      - "8080:8080"
+    volumes:
+      # Ta base SQLite + clé de chiffrement, visibles dans C:\Risk\server\data
+      - ./server/data:/app/server/data

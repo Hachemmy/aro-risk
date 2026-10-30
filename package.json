@@ -1,0 +1,12 @@
+{
+  "name": "aro-plateforme",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Monorepo ARO — server Express + client React/Vite/Tailwind",
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "seed": "npm --prefix server run seed",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev"
+  }
+}

@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/* Palette ARO (échantillonnée des maquettes) */
+@theme {
+  --color-brand-50:  #eef5f6;
+  --color-brand-100: #d9e8ea;
+  --color-brand-200: #b5d3d7;
+  --color-brand-400: #4a8a94;
+  --color-brand-500: #2e6e78;
+  --color-brand-600: #1f575e;
+  --color-brand-700: #14535a;
+  --color-brand-800: #0e3d43;
+  --color-brand-900: #0b2f34;
+  --color-ink: #16323c;
+  --color-cream: #faf3ea;
+  --color-sand: #f1e5d4;
+  --color-skyform: #eaf6fb;
+  --font-sans: "Segoe UI", system-ui, -apple-system, "Noto Sans", sans-serif;
+}
+
+html, body, #root { height: 100%; }
+body { @apply font-sans text-ink antialiased bg-white; }
+
+/* Respirations guidées */
+@keyframes breath-in  { from { transform: scale(0.55); } to { transform: scale(1); } }
+@keyframes breath-out { from { transform: scale(1); } to { transform: scale(0.55); } }
+.breath-in  { animation: breath-in  4s ease-in-out forwards; }
+.breath-out { animation: breath-out 6s ease-in-out forwards; }
+.breath-hold { transform: scale(1); transition: transform 2s ease-in-out; }
+
+/* Pulsation douce (intouchables) */
+@keyframes soft-pulse { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+.soft-pulse { animation: soft-pulse 2.2s ease-in-out infinite; }
+
+::selection { background: #d9e8ea; }
+
+/* ── Confort tactile / responsive ─────────────────────────────────────────── */
+html { -webkit-text-size-adjust: 100%; touch-action: manipulation; }
+
+/* iOS zoom automatique dès < 16px : on force la lisibilité sur téléphone */
+@media (max-width: 640px) {
+  input, select, textarea { font-size: 16px !important; }
+}
+
+/* Les tailles de police restent ≥ 11px sur mobile */
+@media (max-width: 640px) {
+  table { -webkit-overflow-scrolling: touch; }
+}
