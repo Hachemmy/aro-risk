@@ -346,29 +346,29 @@ export function createRoutes() {
     }
   });
 
-  // Export CSV agrégé (aucune PII, aucune note libre).
+  // Export CSV complet des incidents (administrateurs authentifiés uniquement).
   r.get('/admin/export', requireAdmin, (req, res) => {
-    const rows = [[ 'id', 'horodatage', 'region', 'plateformes', 'types', 'gravite', 'statut_alerte' ]];
+    const rows = [[ 'id', 'horodatage', 'region', 'plateformes', 'types', 'gravite', 'statut_alerte', 'recit' ]];
     for (const rp of store.listReports()) {
       rows.push([
         rp.id,
         new Date(rp.createdAt).toISOString(),
-        rpcSafe(rp.region),
-        rpcSafe(rp.platforms.join(' + ')),
-        rpcSafe(rp.types.map((t) => (typeof t === 'string' ? t : t.id)).join(' + ')),
+        rp.region,
+        rp.platforms.join(' + '),
+        rp.types.map((t) => (typeof t === 'string' ? t : t.id)).join(' + '),
         rp.severity,
         rp.alertStatus,
+        decryptNote(rp),
       ]);
     }
     const csv = rows.map((cols) => cols.map(csvCell).join(',')).join('\r\n');
     res.set('Content-Type', 'text/csv; charset=utf-8');
-    res.set('Content-Disposition', 'attachment; filename="aro-anonyme-export.csv"');
-    res.send(csv);
+    res.set('Content-Disposition', 'attachment; filename="aro-incidents.csv"');
+    res.send(`\uFEFF${csv}`);
   });
-  function rpcSafe(s) { return String(s).replace(/[,\r\n]+/g, ' '); }
   function csvCell(s) {
-    const v = String(s ?? '');
-    return v.includes('"') ? `"${v.replace(/"/g, '""')}"` : v;
+    let v = String(s ?? '').replace(/^[=+\-@]/, "'$&");
+    return /[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
   }
 
   return r;

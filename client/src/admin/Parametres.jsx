@@ -64,18 +64,18 @@ export default function Parametres() {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="flex items-center gap-2 text-lg font-bold text-ink">
             <Icon name="database" size={18} className="text-brand-600" />
-            Base de données — où est-elle ?
+            Stockage de la base de données
           </h2>
           <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-700 ring-1 ring-brand-100">
-            moteur : {db?.engine ?? '…'}
+            Moteur : {db?.engine ?? '…'}
           </span>
         </div>
         <p className="mt-1 text-xs leading-relaxed text-ink/60">
-          Tout est stocké dans un fichier unique, sur ta machine — rien dans le cloud.
+          Les données sont centralisées dans une base persistante et protégée par chiffrement.
         </p>
 
         <div className="mt-3 rounded-xl bg-ink/[0.04] p-3">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-ink/50">Chemin sur ton ordinateur</p>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-ink/50">Emplacement du stockage</p>
           <code className="mt-1 block break-all font-mono text-sm font-bold text-brand-800">
             {db?.hostPath ?? '…'}
           </code>
@@ -84,12 +84,12 @@ export default function Parametres() {
             {db && (db.keyExists ? (
               <span className="inline-flex items-center gap-0.5 text-green-700">
                 <Icon name="check" size={12} />
-                présente
+                Active
               </span>
             ) : (
               <span className="inline-flex items-center gap-0.5 text-red-600">
                 <Icon name="alert" size={12} />
-                absente
+                Indisponible
               </span>
             ))}
           </p>
@@ -165,12 +165,12 @@ export default function Parametres() {
       <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-100">
         <h2 className="text-lg font-bold text-ink">Export des données</h2>
         <p className="mt-1 text-xs leading-relaxed text-ink/60">
-          Télécharge les données anonymes enregistrées au format CSV.
+          Télécharge tous les incidents enregistrés au format CSV, compatible avec Excel.
         </p>
-        <a href="/api/admin/export" download="aro-anonyme.csv" target="_blank" rel="noreferrer"
+        <a href="/api/admin/export" download="aro-incidents.csv" target="_blank" rel="noreferrer"
            className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand-700 px-4 py-1.5 text-sm font-bold text-white hover:bg-brand-800">
           <Icon name="download" size={14} />
-          Exporter les données
+Télécharger tous les incidents
         </a>
       </section>
 
