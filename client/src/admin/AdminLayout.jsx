@@ -41,7 +41,7 @@ export default function AdminLayout() {
   return (
     <div className="flex min-h-full bg-white">
       {/* ── Menu latéral réduit à 3 onglets ── */}
-      <aside className="hidden w-64 shrink-0 flex-col justify-between bg-brand-800 md:flex">
+      <aside className="hidden h-screen w-64 shrink-0 flex-col justify-between overflow-y-auto bg-brand-800 md:sticky md:top-0 md:flex">
         <div>
           <div className="p-5"><Logo light /></div>
           <nav className="mt-6 space-y-1 px-3">
