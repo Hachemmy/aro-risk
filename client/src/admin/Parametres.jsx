@@ -170,7 +170,7 @@ export default function Parametres() {
         <a href="/api/admin/export" download="aro-incidents.csv" target="_blank" rel="noreferrer"
            className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand-700 px-4 py-1.5 text-sm font-bold text-white hover:bg-brand-800">
           <Icon name="download" size={14} />
-Télécharger tous les incidents
+          Télécharger tous les incidents
         </a>
       </section>
 
