@@ -77,7 +77,7 @@ export function threatLevel(count) {
   return THREAT_LEVELS.find((l) => count >= l.min && count <= l.max).level;
 }
 
-// Annuaire régional des structures d'aide (prototype : entrées types à
+// Annuaire régional des structures d'aide (entrées de référence à
 // compléter avec les contacts réels de l'association partenaire).
 // `national: true` = structure joignable depuis n'importe quelle région.
 export const HELP_RESOURCES = [

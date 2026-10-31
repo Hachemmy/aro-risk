@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Données de démonstration pour la maquette ARO.
+// Jeu de données de validation pour ARO.
 // Génère des signalements ANONYMES plausibles sur les 14 derniers jours pour
 // faire vivre la carte thermique et le journal. Aucune donnée personnelle.
 //   exécution : npm run seed   (dans server/)
@@ -93,12 +93,12 @@ function generate() {
     }
   }
 
-  console.log(`Jeu de démonstration prêt : ${store.count()} signalements anonymes (moteur ${store.engine}).`);
+  console.log(`Jeu de données de validation prêt : ${store.count()} signalements anonymes (moteur ${store.engine}).`);
   console.log('  Démarre l’API avec : npm run dev   (dans server/)');
 }
 
 // Exécutable en CLI (`node src/seed.js`) ou appelé par la console admin
-// (POST /admin/demo-reseed) pour régénérer la démonstration à la volée.
+// Utile pour préparer un environnement de validation ou de formation.
 export function generateDemo() {
   generate();
   return { ok: true, total: store.count() };

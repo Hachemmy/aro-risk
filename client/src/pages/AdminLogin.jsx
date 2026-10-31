@@ -8,7 +8,6 @@ import { api } from '../lib/api.js';
 // ─────────────────────────────────────────────────────────────────────────────
 // Accès restreint — Espace Administrateur.
 // Session éphémère via cookie HttpOnly (2 h). Aucune persistance côté appareil.
-// Démo : utilisateur `aro.admin`, passe `AroDemo2026!`.
 // ─────────────────────────────────────────────────────────────────────────────
 export default function AdminLogin() {
   const navigate = useNavigate();
@@ -107,10 +106,6 @@ export default function AdminLogin() {
               <p className="flex items-start gap-1.5 rounded-xl bg-brand-50 p-3 text-xs leading-relaxed text-brand-800 ring-1 ring-brand-100">
                 <Icon name="alert" size={13} className="mt-0.5 shrink-0" />
                 <span>Un souci d'accès ? Contactez l'administrateur technique via ce canal sécurisé.</span>
-              </p>
-
-              <p className="text-center text-xs text-ink/50">
-                Démo — accès <code className="rounded bg-brand-50 px-1 font-mono text-brand-700">aro.admin</code> / <code className="rounded bg-brand-50 px-1 font-mono text-brand-700">AroDemo2026!</code>
               </p>
             </div>
           </form>

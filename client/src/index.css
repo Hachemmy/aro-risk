@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Palette ARO (échantillonnée des maquettes) */
+/* Palette visuelle ARO */
 @theme {
   --color-brand-50:  #eef5f6;
   --color-brand-100: #d9e8ea;

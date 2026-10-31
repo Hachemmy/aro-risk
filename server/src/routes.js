@@ -4,7 +4,7 @@
 // Public  : POST /api/reports  · GET /api/stats · GET /api/resources · GET /api/meta
 // Console : POST /api/admin/login ·logout ·me
 //           GET  /api/admin/overview | reports | reports/:id/note | alerts | alerts/:id/status
-//           POST /api/admin/alerts/:id/dispatch · purge · demo-reseed
+//           POST /api/admin/alerts/:id/dispatch · purge
 //           GET  /api/admin/export
 // ─────────────────────────────────────────────────────────────────────────────
 import crypto from 'node:crypto';
@@ -15,12 +15,11 @@ import express from 'express';
 import { REGIONS, INCIDENT_TYPES, PLATFORMS, HELP_RESOURCES, threatLevel, THREAT_LEVELS } from './data.js';
 import { store, newReport, queueAlert, decryptNote, DATA_DIR } from './db.js';
 import { sha256 } from './crypto.js';
-import { generateDemo } from './seed.js';
 
 // Identifiant + passe console service (variables d'environnement, non nominatifs).
 const ADMIN_USER = process.env.ARO_ADMIN_USER || 'aro.admin';
-const ADMIN_PASSWORD = process.env.ARO_ADMIN_PASSWORD || 'AroDemo2026!';
-const ADMIN_HASH = sha256(ADMIN_PASSWORD + '::aro');
+const ADMIN_PASSWORD = process.env.ARO_ADMIN_PASSWORD || null;
+const ADMIN_HASH = ADMIN_PASSWORD ? sha256(ADMIN_PASSWORD + '::aro') : null;
 const SESSION_TTL = 2 * 60 * 60 * 1000; // 2 h
 
 // Session en mémoire : token éphémère -> { exp }, jamais persistés sur disque.
@@ -295,16 +294,11 @@ export function createRoutes() {
     res.json({ id: a.id, reportId: a.reportId, status: a.status, updatedAt: a.updatedAt });
   });
 
-  // Simule l'envoi effectif du relais (prototype : simulation d'envoi).
+  // Marque la transmission au relais comme effectuée.
   r.post('/admin/alerts/:id/dispatch', requireAdmin, (req, res) => {
     const a = store.setAlertStatus(req.params.id, 'sent');
     if (!a) return res.status(404).json({ error: 'not_found' });
     res.json({ ok: true, id: a.id, status: a.status, dispatchedAt: a.updatedAt });
-  });
-
-  // Régénérer le jeu de démonstration (console, paramètres).
-  r.post('/admin/demo-reseed', requireAdmin, (req, res) => {
-    res.json(generateDemo());
   });
 
   // Purge du vieux stock (cahier des charges : on ne garde pas longtemps).

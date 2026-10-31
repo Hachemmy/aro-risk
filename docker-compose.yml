@@ -16,7 +16,7 @@ services:
       PORT: "8080"
       # Identifiants console administrateur (change-les avant une vraie mise en ligne)
       ARO_ADMIN_USER: "aro.admin"
-      ARO_ADMIN_PASSWORD: "AroDemo2026!"
+      ARO_ADMIN_PASSWORD: "ChangezCeMotDePasseLocal!"
     ports:
       - "8080:8080"
     volumes:

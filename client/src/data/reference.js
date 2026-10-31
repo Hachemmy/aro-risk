@@ -33,7 +33,7 @@ export const REGIONS = [
 ];
 
 // Rangées de la carte schématique « MADAGASCAR — Carte schématique des 24 régions »
-// (approximation géographique de l'île, du nord au sud, comme la maquette).
+// (approximation géographique de l'île, du nord au sud).
 export const MAP_ROWS = [
   [14],                 // Diana
   [21, 22],             // Sava · Sofia

@@ -4,7 +4,7 @@ import { api } from '../lib/api.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Onglet 3 — Paramètres techniques (menu minimaliste, 3 onglets max).
-// Outils : purge de rétention, régénération du jeu de démo, export CSV,
+// Outils : purge de rétention, export CSV,
 // rappel des mesures d'anonymat actives côté serveur.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -162,24 +162,16 @@ export default function Parametres() {
         </div>
       </section>
 
-      {/* Démo */}
       <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-100">
-        <h2 className="text-lg font-bold text-ink">Démonstration</h2>
+        <h2 className="text-lg font-bold text-ink">Export des données</h2>
         <p className="mt-1 text-xs leading-relaxed text-ink/60">
-          Régénérer un jeu de signalements anonymes plausibles sur 14 jours — recharge la carte thermique, le donut et le journal.
+          Télécharge les données anonymes enregistrées au format CSV.
         </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button type="button" disabled={busy !== null}
-            onClick={() => run('seed', () => api.adminPost('/demo-reseed', {}).then(() => 'Jeu de démonstration régénéré.'))}
-            className="rounded-full bg-sand px-4 py-1.5 text-sm font-bold text-brand-800 ring-1 ring-amber-200 hover:bg-amber-100 disabled:opacity-50">
-            {busy === 'seed' ? 'Régénération…' : 'Régénérer la démo'}
-          </button>
-          <a href="/api/admin/export" download="aro-anonyme.csv" target="_blank" rel="noreferrer"
-             className="flex items-center gap-1.5 rounded-full bg-brand-50 px-4 py-1.5 text-sm font-bold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-100">
-            <Icon name="download" size={14} />
-            Export CSV (anonyme)
-          </a>
-        </div>
+        <a href="/api/admin/export" download="aro-anonyme.csv" target="_blank" rel="noreferrer"
+           className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand-700 px-4 py-1.5 text-sm font-bold text-white hover:bg-brand-800">
+          <Icon name="download" size={14} />
+          Exporter les données
+        </a>
       </section>
 
       {/* Mesures d'anonymat */}

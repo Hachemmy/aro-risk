@@ -63,7 +63,7 @@ function useNoisePlayer() {
     if (!sound) return;
     stopAll();
     const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) { setPlaying(id); return; } // environnement sans audio : démo visuelle
+    if (!AC) { setPlaying(id); return; } // environnement sans audio : lecture uniquement visuelle
     if (!ctxRef.current) ctxRef.current = new AC();
     const ctx = ctxRef.current;
     if (ctx.state === 'suspended') ctx.resume();
