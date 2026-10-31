@@ -197,29 +197,6 @@ export default function Parametres() {
           Clé du récit chiffré : stockée hors base (fichier <code className="font-mono">server/data/.textkey</code>) — même en cas de fuite de la base, les récits restent illisibles. Pour la production : secret manager (vault), HTTPS obligatoire + HSTS.
         </p>
       </section>
-
-      {/* Relais externes */}
-      <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-100">
-        <h2 className="text-lg font-bold text-ink">Relais externes (alertes)</h2>
-        <ul className="mt-2 space-y-1.5 text-sm text-ink/75">
-          <li className="flex items-start gap-2">
-            <Icon name="refresh" size={14} className="mt-0.5 shrink-0 text-brand-600" />
-            <span><strong>Escalade automatique</strong> — cas « gravité ≥ 3 » (chantage, sextorsion, revenge porn + seconde catégorie).</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <Icon name="send" size={14} className="mt-0.5 shrink-0 text-brand-600" />
-            <span><strong>Destinataires simulés</strong> — Bureau Anti-Cybercrime — SNCT · Ligne Verte Nationale (prototype : envoi mocké).</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <Icon name="search" size={14} className="mt-0.5 shrink-0 text-brand-600" />
-            <span><strong>Vérificabilité</strong> — <code className="font-mono text-xs">GET /api/admin/alerts/:id/status</code> donne l'état exact de transmission.</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <Icon name="ban" size={14} className="mt-0.5 shrink-0 text-brand-600" />
-            <span><strong>Aucune donnée personnelle</strong> n'accompagne une alerte : région + type + gravité uniquement.</span>
-          </li>
-        </ul>
-      </section>
     </div>
   );
 }
