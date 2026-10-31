@@ -75,15 +75,15 @@ export default function Parametres() {
             <dd className="text-xl font-bold text-brand-800">{db?.alerts ?? '—'}</dd>
           </div>
           <div className="rounded-xl bg-brand-50 p-3">
-            <dt className="text-[10px] font-bold uppercase tracking-wide text-ink/50">Sauvegarde</dt>
-            <dd className="mt-1 text-sm font-bold text-brand-800">Disponible</dd>
+            <dt className="text-[10px] font-bold uppercase tracking-wide text-ink/50">Export</dt>
+            <dd className="mt-1 text-sm font-bold text-brand-800">CSV disponible</dd>
           </div>
         </dl>
 
-        <a href="/api/admin/db-backup" download
+        <a href="/api/admin/export" download="aro-incidents.csv"
            className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-brand-700 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800">
           <Icon name="download" size={15} />
-          Télécharger une sauvegarde
+          Télécharger tous les incidents en CSV
         </a>
       </section>
 
