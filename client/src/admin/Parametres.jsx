@@ -21,20 +21,10 @@ export default function Parametres() {
   const [busy, setBusy] = useState(null);
   const [msg, setMsg] = useState(null);
   const [db, setDb] = useState(null);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     api.admin('/db-info').then(setDb).catch(() => setDb(null));
   }, []);
-
-  async function copyPath() {
-    if (!db?.hostPath) return;
-    try {
-      await navigator.clipboard.writeText(db.hostPath);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch { /* presse-papiers indisponible */ }
-  }
 
   async function run(label, fn) {
     setBusy(label);
@@ -59,118 +49,41 @@ export default function Parametres() {
         </p>
       )}
 
-      {/* Base de données : emplacement réel + sauvegarde */}
+      {/* Disponibilité des données */}
       <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-100">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="flex items-center gap-2 text-lg font-bold text-ink">
             <Icon name="database" size={18} className="text-brand-600" />
-            Stockage de la base de données
+            Protection des données
           </h2>
-          <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-700 ring-1 ring-brand-100">
-            Moteur : {db?.engine ?? '…'}
+          <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-bold text-green-700 ring-1 ring-green-100">
+            <Icon name="check" size={12} />
+            {db?.keyExists ? 'Protection active' : 'En vérification'}
           </span>
         </div>
-        <p className="mt-1 text-xs leading-relaxed text-ink/60">
-          Les données sont centralisées dans une base persistante et protégée par chiffrement.
+        <p className="mt-2 text-xs leading-relaxed text-ink/60">
+          Les informations enregistrées sont stockées de manière persistante et leurs contenus sensibles sont chiffrés.
         </p>
 
-        <div className="mt-3 rounded-xl bg-ink/[0.04] p-3">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-ink/50">Emplacement du stockage</p>
-          <code className="mt-1 block break-all font-mono text-sm font-bold text-brand-800">
-            {db?.hostPath ?? '…'}
-          </code>
-          <p className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-ink/50">
-            <span>Clé de chiffrement : <span className="font-mono">{db?.keyHostPath ?? '…'}</span></span>
-            {db && (db.keyExists ? (
-              <span className="inline-flex items-center gap-0.5 text-green-700">
-                <Icon name="check" size={12} />
-                Active
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-0.5 text-red-600">
-                <Icon name="alert" size={12} />
-                Indisponible
-              </span>
-            ))}
-          </p>
-          {db?.inDocker && (
-            <p className="mt-1 text-[11px] text-ink/50">
-              Dans le conteneur, ce même dossier est monté — chemin interne : <span className="font-mono">{db.containerPath}</span>
-            </p>
-          )}
-        </div>
-
-        <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-xl bg-brand-50 p-2">
+        <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
+          <div className="rounded-xl bg-brand-50 p-3">
             <dt className="text-[10px] font-bold uppercase tracking-wide text-ink/50">Signalements</dt>
             <dd className="text-xl font-bold text-brand-800">{db?.reports ?? '—'}</dd>
           </div>
-          <div className="rounded-xl bg-brand-50 p-2">
+          <div className="rounded-xl bg-brand-50 p-3">
             <dt className="text-[10px] font-bold uppercase tracking-wide text-ink/50">Alertes</dt>
             <dd className="text-xl font-bold text-brand-800">{db?.alerts ?? '—'}</dd>
           </div>
-          <div className="rounded-xl bg-brand-50 p-2">
-            <dt className="text-[10px] font-bold uppercase tracking-wide text-ink/50">Taille</dt>
-            <dd className="text-xl font-bold text-brand-800">
-              {db ? (db.sizeBytes / 1024).toFixed(0) + ' Ko' : '—'}
-            </dd>
+          <div className="rounded-xl bg-brand-50 p-3">
+            <dt className="text-[10px] font-bold uppercase tracking-wide text-ink/50">Sauvegarde</dt>
+            <dd className="mt-1 text-sm font-bold text-brand-800">Disponible</dd>
           </div>
         </dl>
 
-        <div className="mt-3 flex flex-wrap gap-2">
-          <a href="/api/admin/db-backup" download
-             className="flex items-center gap-1.5 rounded-full bg-brand-700 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800">
-            <Icon name="download" size={15} />
-            Télécharger une copie
-          </a>
-          <button type="button" onClick={copyPath}
-            className="flex items-center gap-1.5 rounded-full bg-brand-50 px-4 py-2 text-sm font-bold text-brand-700 ring-1 ring-brand-100 hover:bg-brand-100">
-            <Icon name={copied ? 'check' : 'copy'} size={15} />
-            {copied ? 'Chemin copié' : 'Copier le chemin'}
-          </button>
-        </div>
-        {db?.platform === 'win32' ? (
-          <p className="mt-2 text-[11px] leading-relaxed text-ink/50">
-            Astuce Windows : appuie sur <kbd className="rounded bg-white px-1 ring-1 ring-brand-100">Win + R</kbd>,
-            colle <span className="font-mono">{db?.hostDataDir ?? '…'}</span> et valide — le dossier s'ouvre dans l'Explorateur.
-            Le fichier <span className="font-mono">.textkey</span> est masqué par Windows : active « Éléments masqués ».
-          </p>
-        ) : (
-          <p className="mt-2 text-[11px] leading-relaxed text-ink/50">
-            Astuce : ouvre ce dossier dans ton gestionnaire de fichiers, ou lance
-            <span className="ml-1 font-mono">xdg-open {db?.hostDataDir ?? '…'}</span>.
-            Le fichier <span className="font-mono">.textkey</span> est un fichier caché (Ctrl+H).
-          </p>
-        )}
-      </section>
-
-      {/* Rétention & purge */}
-      <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-100">
-        <h2 className="text-lg font-bold text-ink">Rétention des données anonymes</h2>
-        <p className="mt-1 text-xs leading-relaxed text-ink/60">
-          Le cahier des charges impose un stockage minimum. Purger les signalements les plus âgés garde la base utile et réduit tout risque futur.
-          Valeur recommandée en production : 30 jours.
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {[7, 30, 90].map((d) => (
-            <button key={d} type="button" disabled={busy !== null}
-              onClick={() => run('purge', () => api.adminPost('/purge', { days: d }).then((r) => `${r.deleted.reports} signalement(s) et ${r.deleted.alerts} alerte(s) supprimés (rétention ${d} j).`))}
-              className="rounded-full bg-brand-700 px-4 py-1.5 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-50">
-              Purger &gt; {d} jours
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-100">
-        <h2 className="text-lg font-bold text-ink">Export des données</h2>
-        <p className="mt-1 text-xs leading-relaxed text-ink/60">
-          Télécharge tous les incidents enregistrés au format CSV, compatible avec Excel.
-        </p>
-        <a href="/api/admin/export" download="aro-incidents.csv" target="_blank" rel="noreferrer"
-           className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-brand-700 px-4 py-1.5 text-sm font-bold text-white hover:bg-brand-800">
-          <Icon name="download" size={14} />
-          Télécharger tous les incidents
+        <a href="/api/admin/db-backup" download
+           className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-brand-700 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800">
+          <Icon name="download" size={15} />
+          Télécharger une sauvegarde
         </a>
       </section>
 
