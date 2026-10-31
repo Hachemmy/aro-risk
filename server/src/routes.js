@@ -318,12 +318,18 @@ export function createRoutes() {
     const file = store.path;
     let sizeBytes = 0;
     try { sizeBytes = fs.statSync(file).size; } catch { /* fichier pas encore créé */ }
+    // Chemin réellement visible sur la machine hôte. Surchargeable via env
+    // quand la base est montée depuis un autre dossier (Docker, NAS…).
+    const hostPath = process.env.ARO_DB_HOST_PATH || file;
+    const hostDataDir = process.env.ARO_DB_HOST_DIR || path.dirname(hostPath);
+    const keyHostPath = process.env.ARO_KEY_HOST_PATH || path.join(hostDataDir, '.textkey');
     res.json({
       engine: store.engine,
+      platform: process.platform,
       containerPath: file,
-      hostPath: 'C:\\Risk\\server\\data\\aro.sqlite',
-      hostDataDir: 'C:\\Risk\\server\\data',
-      keyHostPath: 'C:\\Risk\\server\\data\\.textkey',
+      hostPath,
+      hostDataDir,
+      keyHostPath,
       keyExists: fs.existsSync(path.join(DATA_DIR, '.textkey')),
       sizeBytes,
       reports: store.count(),

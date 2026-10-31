@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import PublicHeader from '../components/PublicHeader.jsx';
+import Icon from '../components/Icon.jsx';
 import { api } from '../lib/api.js';
 import { REGIONS } from '../data/reference.js';
 
@@ -157,9 +159,10 @@ function Breathing() {
         <button
           type="button"
           onClick={() => { setRunning(!running); if (!running) { setCycles(0); setPhase('inspire'); } else setPhase('repos'); }}
-          className={'rounded-full px-4 py-1.5 text-sm font-bold transition '
+          className={'flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-bold transition '
             + (running ? 'bg-sand text-brand-800 ring-1 ring-amber-200' : 'bg-brand-700 text-white hover:bg-brand-800')}>
-          {running ? '■ Arrêter' : '▶ Commencer'}
+          <Icon name={running ? 'stop' : 'play'} size={13} />
+          {running ? 'Arrêter' : 'Commencer'}
         </button>
       </div>
       <div className="mt-4 flex items-center gap-4">
@@ -210,7 +213,10 @@ export default function Comfort() {
               <p className="mt-2 text-sm leading-relaxed text-ink/70">
                 Ce que tu ressens est légitime. Tu peux faire une pause, chercher de l'écoute, ou simplement prendre un moment pour toi.
               </p>
-              <p className="mt-4 text-xs text-ink/60">👉 Une respiration lente, le temps de t'évader.</p>
+              <p className="mt-4 flex items-center gap-1.5 text-xs text-ink/60">
+                <Icon name="arrowRight" size={14} />
+                Une respiration lente, le temps de t'évader.
+              </p>
             </div>
             <svg viewBox="0 0 160 160" className="pointer-events-none absolute -right-2 -top-4 h-40 w-40 opacity-90" aria-hidden="true">
               <circle cx="80" cy="80" r="70" fill="#e7d9c5" />
@@ -269,8 +275,9 @@ export default function Comfort() {
               <button
                 type="button"
                 onClick={() => setCitationIdx((i) => (i + 1) % CITATIONS.length)}
-                className="mt-3 rounded-full bg-brand-700 px-4 py-1.5 text-sm font-bold text-white hover:bg-brand-800">
-                ↺ Une citation bienveillante
+                className="mt-3 flex items-center gap-1.5 rounded-full bg-brand-700 px-4 py-1.5 text-sm font-bold text-white hover:bg-brand-800">
+                <Icon name="refresh" size={14} />
+                Une citation bienveillante
               </button>
             </div>
           </div>
@@ -293,7 +300,7 @@ export default function Comfort() {
                       className={'flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold transition '
                         + (playing === s.id ? 'bg-brand-700 text-white' : 'bg-brand-50 text-brand-700 ring-1 ring-brand-200 hover:bg-brand-100')}
                       aria-label={(playing === s.id ? 'Arrêter ' : 'Écouter ') + s.label}>
-                      {playing === s.id ? '■' : '▶'}
+                      <Icon name={playing === s.id ? 'stop' : 'play'} size={14} />
                     </button>
                     <div className="flex-1">
                       <p className="text-sm font-semibold text-ink">{s.label}</p>
@@ -349,14 +356,17 @@ export default function Comfort() {
         </section>
 
         {/* Bandeau bas */}
-        <div className="mt-10 rounded-xl bg-sand px-4 py-3 text-xs leading-relaxed text-amber-900 ring-1 ring-amber-200">
-          📵 S'il y a un danger immédiat, n'hésite pas à fermer l'appareil et à parler à un adulte de confiance.
-          Le bouton « Quitter » remet une page neutre, sans garder l'historique de cette page.
+        <div className="mt-10 flex items-start gap-2 rounded-xl bg-sand px-4 py-3 text-xs leading-relaxed text-amber-900 ring-1 ring-amber-200">
+          <Icon name="phoneOff" size={15} className="mt-0.5 shrink-0" />
+          <span>
+            S'il y a un danger immédiat, n'hésite pas à fermer l'appareil et à parler à un adulte de confiance.
+            Le bouton « Quitter » remet une page neutre, sans garder l'historique de cette page.
+          </span>
         </div>
 
         <footer className="mt-6 text-center text-xs text-ink/50">
           ARO · Un espace apaisant pour les jeunes de Madagascar &nbsp;·&nbsp;
-          <a href="/" className="underline">Faire un signalement</a>
+          <Link to="/signaler" className="underline">Faire un signalement</Link>
           &nbsp;·&nbsp;Confort &amp; Divertissement &nbsp;·&nbsp;Version 1.0
         </footer>
       </main>

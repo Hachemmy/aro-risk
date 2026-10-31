@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ThreatMap from '../components/ThreatMap.jsx';
+import Icon from '../components/Icon.jsx';
 import { api } from '../lib/api.js';
-import { REGIONS, THREAT_LABELS, THREAT_COLORS, LEVEL_OF } from '../data/reference.js';
+import { REGIONS, THREAT_LABELS, THREAT_COLORS, LEVEL_OF, typeLabel } from '../data/reference.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Onglet 1 — Tableau de bord & carte thermique.
@@ -26,21 +27,19 @@ function Donut({ byType, byRegion }) {
     let high = 0, mid = 0, low = 0;
     for (const r of byRegion || []) {
       const lvl = LEVEL_OF(r.count);
-      if (lvl === 0) low += r.count;
-      else if (lvl === 1) low += r.count;
+      if (lvl <= 1) low += r.count;
       else if (lvl === 2) mid += r.count;
       else high += r.count;
     }
-    // Grille de répartition par type si plus informative :
-    const totalType = (byType || []).reduce((s, t) => s + t.count, 0);
-    if (totalType === 0) return { parts: [{ n: 'Aucune donnée', v: 1 }], total: 1 };
+    const total = high + mid + low;
+    if (total === 0) return { parts: [], total: 0 };
     const parts = [
       { n: 'Haute priorité', v: high, c: '#ef4444' },
       { n: 'Surveillance accrue', v: mid, c: '#fb923c' },
       { n: 'Faible intensité', v: low, c: '#86efac' },
     ].filter((p) => p.v > 0);
-    return { parts, total: parts.reduce((s, p) => s + p.v, 0) };
-  }, [byRegion, byType]);
+    return { parts, total };
+  }, [byRegion]);
 
   let acc = 0;
   const R = 42, C = 2 * Math.PI * R;
@@ -48,6 +47,9 @@ function Donut({ byType, byRegion }) {
   return (
     <div className="flex items-center gap-4">
       <svg viewBox="0 0 120 120" className="h-36 w-36 shrink-0" role="img" aria-label="Répartition des incidents">
+        {levels.total === 0 && (
+          <circle cx="60" cy="60" r={R} fill="none" stroke="#e5e7eb" strokeWidth="16" />
+        )}
         {levels.parts.map((p) => {
           const frac = p.v / levels.total;
           const dash = `${frac * C} ${C}`;
@@ -61,9 +63,12 @@ function Donut({ byType, byRegion }) {
           );
         })}
         <text x="60" y="56" textAnchor="middle" className="fill-ink" fontSize="18" fontWeight="800">{levels.total}</text>
-        <text x="60" y="72" textAnchor="middle" fontSize="8" fill="#64748b">régions actives</text>
+        <text x="60" y="72" textAnchor="middle" fontSize="8" fill="#64748b">signalements</text>
       </svg>
       <ul className="flex-1 space-y-1.5 text-xs">
+        {levels.parts.length === 0 && (
+          <li className="text-ink/50">Aucun signalement pour l'instant.</li>
+        )}
         {levels.parts.map((p) => (
           <li key={p.n} className="flex items-center justify-between gap-2">
             <span className="flex items-center gap-1.5 text-ink/80">
@@ -75,7 +80,7 @@ function Donut({ byType, byRegion }) {
         ))}
         {(byType || []).slice(0, 4).map((t) => (
           <li key={t.id} className="flex items-center justify-between gap-2 border-t border-brand-50 pt-1 text-ink/60">
-            <span className="truncate">{t.label.toLowerCase()}</span>
+            <span className="truncate">{typeLabel(t.id).toLowerCase()}</span>
             <span className="font-semibold">{t.count}</span>
           </li>
         ))}
@@ -108,11 +113,13 @@ export default function Dashboard() {
   const [region, setRegion] = useState('');
   const [err, setErr] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [lastLoaded, setLastLoaded] = useState(null);
 
   async function load() {
     setRefreshing(true);
     try {
       setOverview(await api.admin('/overview'));
+      setLastLoaded(Date.now());
       setErr(null);
     } catch (e) {
       setErr('Impossible de charger la vue d\'ensemble.');
@@ -128,17 +135,6 @@ export default function Dashboard() {
   const selectedCount = region ? counts.get(region) ?? 0 : null;
   const selectedLevel = region ? LEVEL_OF(selectedCount) : null;
 
-  const typeLabel = (id) => ({
-    'revenge-porn': 'Revenge porn',
-    'doxing': 'Doxing',
-    'lynchage': 'Lynchage de meute',
-    'menaces': 'Harcèlement textuel',
-    'usurpation': "Usurpation d'identité",
-    'humiliation': 'Humiliation publique',
-    'chantage': 'Chantage / Sextorsion',
-    'exclusion': 'Exclusion ciblée',
-  }[id] ?? id);
-
   const sevLabel = (s) => (s >= 3 ? { t: 'Haute priorité', c: 'bg-red-50 text-red-700 ring-red-200' }
     : s === 2 ? { t: 'Priorité moyenne', c: 'bg-orange-50 text-orange-700 ring-orange-200' }
     : { t: 'À surveiller', c: 'bg-green-50 text-green-700 ring-green-200' });
@@ -146,13 +142,14 @@ export default function Dashboard() {
   return (
     <div className="space-y-5">
       {/* Rappel anonymat */}
-      <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200">
-        🔒 Rappel anonymat : zéro log nominatif. Aucune trace locale, aucune navigation n'est enregistrée (détails dans « Paramètres »).
+      <div className="flex items-start gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900 ring-1 ring-amber-200">
+        <Icon name="lock" size={16} className="mt-0.5 shrink-0" />
+        <span>Rappel anonymat : zéro log nominatif. Aucune trace locale, aucune navigation n'est enregistrée (détails dans « Paramètres »).</span>
       </div>
 
       {/* Cartes de stats */}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Signalements totaux (aujourd'hui)" value={total}
+        <StatCard label="Signalements totaux" value={total}
           hint="Signalements stockés, strictement anonymes" />
         <StatCard label="Incidents ouverts" value={overview?.stats?.openIncidents ?? '—'}
           hint="Alertes externes en attente" accent={{ txt: 'relai anti-cybercrime en attente', cls: 'text-orange-600' }} />
@@ -169,12 +166,13 @@ export default function Dashboard() {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-ink">Où concentrer les moyens ?</h2>
-            <p className="text-xs text-ink/50">Agrégation temps réel · Dernier point : {overview ? new Date(Date.now()).toLocaleTimeString('fr-FR') : '…'}</p>
+            <p className="text-xs text-ink/50">Agrégation temps réel · Dernier point : {lastLoaded ? new Date(lastLoaded).toLocaleTimeString('fr-FR') : '…'}</p>
           </div>
           <div className="flex gap-2">
             <button type="button" onClick={load} disabled={refreshing}
-              className="rounded-full bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-100">
-              {refreshing ? 'Actualisation…' : '↻ Actualiser'}
+              className="flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-100">
+              <Icon name="refresh" size={13} className={refreshing ? 'animate-spin' : ''} />
+              {refreshing ? 'Actualisation…' : 'Actualiser'}
             </button>
             <Link to="/admin/espace/journal"
               className="rounded-full bg-brand-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-brand-800">
@@ -208,7 +206,7 @@ export default function Dashboard() {
                     {selectedCount} cas — {THREAT_LABELS[selectedLevel]}
                   </p>
                   <p className="mt-1 text-xs text-ink/60">
-                    Basule pour un déploiement d'écoute : {selectedLevel >= 2 ? 'priorité moyenne/haute' : 'veille normale'}.
+                    Priorité de déploiement d'écoute : {selectedLevel >= 2 ? 'moyenne à haute' : 'veille normale'}.
                   </p>
                 </div>
               )}
@@ -225,8 +223,9 @@ export default function Dashboard() {
       <section className="rounded-2xl bg-white shadow-sm ring-1 ring-brand-100">
         <div className="flex flex-wrap items-center justify-between gap-2 px-5 py-4">
           <h2 className="text-lg font-bold text-ink">Journal des signalements</h2>
-          <Link to="/admin/espace/journal" className="text-xs font-bold text-brand-700 underline underline-offset-2">
-            Voir tout (journal complet) →
+          <Link to="/admin/espace/journal" className="flex items-center gap-1 text-xs font-bold text-brand-700 underline underline-offset-2">
+            Voir tout (journal complet)
+            <Icon name="arrowRight" size={13} />
           </Link>
         </div>
         <div className="overflow-x-auto">
@@ -254,7 +253,10 @@ export default function Dashboard() {
                     </td>
                     <td className="px-5 py-2.5">
                       <span className="font-mono text-xs font-bold text-ink">{rJun.id}</span>
-                      <span className="ml-2 text-xs text-ink/60">🟢 {rJun.types.map(typeLabel).join(', ')}</span>
+                      <span className="ml-2 inline-flex items-center gap-1 text-xs text-ink/60">
+                        <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                        {rJun.types.map(typeLabel).join(', ')}
+                      </span>
                       {rJun.hasNote && <span className="ml-1 text-xs text-brand-600">· récit chiffré</span>}
                     </td>
                     <td className="px-5 py-2.5">{rJun.region}</td>
@@ -291,7 +293,7 @@ export default function Dashboard() {
             <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-brand-50/60 px-3 py-2 ring-1 ring-brand-100">
               <span className="text-sm text-ink">
                 <span className="font-mono text-xs font-bold text-brand-700">{a.id}</span>
-                <span className="mx-2 text-ink/40">→</span>
+                <Icon name="arrowRight" size={12} className="mx-2 inline align-middle text-ink/40" />
                 {a.resource}
                 <span className="ml-2 text-xs text-ink/50">dossier {a.reportId}</span>
               </span>
@@ -305,8 +307,9 @@ export default function Dashboard() {
             <li className="text-sm text-ink/50">Aucune sollicitation externe en file pour l'instant.</li>
           )}
         </ul>
-        <p className="mt-3 text-xs text-ink/50">
-          ⚠️ On ne déclenche d'alerte externe que pour les cas potentiellement graves (chantage, sextorsion, revenge porn). Le récit chiffré reste dans le journal jusqu'à l'accusé de réception.
+        <p className="mt-3 flex items-start gap-2 text-xs text-ink/50">
+          <Icon name="alert" size={14} className="mt-0.5 shrink-0" />
+          <span>On ne déclenche d'alerte externe que pour les cas potentiellement graves (chantage, sextorsion, revenge porn). Le récit chiffré reste dans le journal jusqu'à l'accusé de réception.</span>
         </p>
       </section>
     </div>

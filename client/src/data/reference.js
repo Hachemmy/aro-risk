@@ -76,6 +76,19 @@ export const PLATFORMS = [
   { id: 'autre',     label: 'Autre plateforme' },
 ];
 
+// Libellés courts partagés par le tableau de bord et le journal.
+export const TYPE_LABELS = {
+  'revenge-porn': 'Revenge porn',
+  'doxing': 'Doxing',
+  'lynchage': 'Lynchage de meute',
+  'menaces': 'Harcèlement textuel',
+  'usurpation': "Usurpation d'identité",
+  'humiliation': 'Humiliation publique',
+  'chantage': 'Chantage / Sextorsion',
+  'exclusion': 'Exclusion ciblée',
+};
+export const typeLabel = (id) => TYPE_LABELS[id] ?? id;
+
 export const THREAT_COLORS = ['#86efac', '#facc15', '#fb923c', '#ef4444'];
 export const THREAT_LABELS = ['0 – 5 cas', '6 – 15 cas', '16 – 30 cas', '+30 cas'];
 export const LEVEL_OF = (count) => (count >= 31 ? 3 : count >= 16 ? 2 : count >= 6 ? 1 : 0);

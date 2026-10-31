@@ -1,4 +1,5 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import Landing from './pages/Landing.jsx';
 import Report from './pages/Report.jsx';
 import Comfort from './pages/Comfort.jsx';
 import AdminLogin from './pages/AdminLogin.jsx';
@@ -10,8 +11,11 @@ import Parametres from './admin/Parametres.jsx';
 export default function App() {
   return (
     <Routes>
+      {/* ── Accueil : choix de l'espace ── */}
+      <Route path="/" element={<Landing />} />
+
       {/* ── Espace public ── */}
-      <Route path="/" element={<Report />} />
+      <Route path="/signaler" element={<Report />} />
       <Route path="/confort" element={<Comfort />} />
 
       {/* ── Console administrateur ── */}
@@ -22,8 +26,8 @@ export default function App() {
         <Route path="parametres" element={<Parametres />} />
       </Route>
 
-      {/* Route inconnue → retour accueil public */}
-      <Route path="*" element={<Report />} />
+      {/* Route inconnue → retour à l'accueil */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

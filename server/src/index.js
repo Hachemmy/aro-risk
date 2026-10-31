@@ -46,7 +46,7 @@ if (fs.existsSync(path.join(distDir, 'index.html'))) {
     if (req.path.startsWith('/api') || req.path === '/health') return next();
     res.sendFile(path.join(distDir, 'index.html'));
   });
-  console.log(`✔ Frontend React servi depuis ${distDir}`);
+  console.log(`Frontend React servi depuis ${distDir}`);
 }
 
 // Réponse par défaut propre, sans pile d'erreur côté client.
@@ -62,6 +62,6 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`✔ ARO API en ligne : http://localhost:${PORT}  (moteur de stockage : ${store.engine})`);
+  console.log(`ARO API en ligne : http://localhost:${PORT}  (moteur de stockage : ${store.engine})`);
   console.log('  Anonymat actif — aucune donnée personnelle n\'est enregistrée.');
 });

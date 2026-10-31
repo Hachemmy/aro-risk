@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo.jsx';
+import Icon from '../components/Icon.jsx';
 import QuickExit from '../components/QuickExit.jsx';
 import { api } from '../lib/api.js';
 
@@ -53,8 +54,9 @@ export default function AdminLayout() {
               </NavLink>
             ))}
           </nav>
-          <div className="mx-5 mt-8 rounded-xl bg-brand-900/70 p-3 text-[11px] leading-relaxed text-brand-100 ring-1 ring-white/10">
-            🔒 Anonymat garanti : cette console n'agrège que des données techniques. Aucun nom, adresse IP, e-mail ou géoloc n'arrive au serveur.
+          <div className="mx-5 mt-8 flex items-start gap-2 rounded-xl bg-brand-900/70 p-3 text-[11px] leading-relaxed text-brand-100 ring-1 ring-white/10">
+            <Icon name="lock" size={13} className="mt-0.5 shrink-0" />
+            <span>Anonymat garanti : cette console n'agrège que des données techniques. Aucun nom, adresse IP, e-mail ou géoloc n'arrive au serveur.</span>
           </div>
         </div>
         <div className="p-5 text-[11px] text-brand-300">
@@ -67,7 +69,7 @@ export default function AdminLayout() {
       <div className="flex min-h-full flex-1 flex-col">
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-brand-100 bg-white px-4 py-3 md:px-8">
           <div>
-            <p className="text-xs text-ink/50">Salut, {me?.user ?? 'aro.admin'} 👋 · Aucune PII n'a jamais quitté les téléphones des jeunes : ce que tu lis ici reste technique et anonyme.</p>
+            <p className="text-xs text-ink/50">Salut, {me?.user ?? 'aro.admin'} · Aucune PII n'a jamais quitté les téléphones des jeunes : ce que tu lis ici reste technique et anonyme.</p>
             <h1 className="text-xl font-bold text-ink">Tableau de Bord Administrateur</h1>
           </div>
           <div className="flex items-center gap-2 text-sm">

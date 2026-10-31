@@ -6,7 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { store, queueAlert } from './db.js';
+import { store, queueAlert, computeSeverity } from './db.js';
 import { INCIDENT_TYPES } from './data.js';
 import { encryptText } from './crypto.js';
 
@@ -66,12 +66,14 @@ function generate() {
       platforms.push(pPool.splice(rndInt(pPool.length), 1)[0]);
     }
 
-    const hasSev2 = types.some((t) => t.sev >= 2);
-    const severity = hasSev2 && types.length >= 2 ? 3 : hasSev2 ? 2 : 1;
+    const severity = computeSeverity(types);
 
     // ~50 % des signalements incluent un récit (chiffré à l'insertion).
     const note = Math.random() < 0.5 ? rnd(NOTES) : '';
 
+    // Certains cas graves sont escaladés ; l'état du signalement doit refléter
+    // l'existence réelle d'une alerte (pas de "queued" orphelin).
+    const shouldAlert = severity >= 3 && Math.random() < 0.55;
     const rep = {
       id: `AR-${String(i + 1).padStart(3, '0')}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`,
       createdAt,
@@ -80,21 +82,18 @@ function generate() {
       types,
       severity,
       noteEnc: note ? encryptText(note) : null,
-      alertStatus: severity >= 3 ? 'queued' : 'none',
+      alertStatus: shouldAlert ? 'queued' : 'none',
     };
     store.insertReport(rep);
 
     // Une partie des alertes est déjà "envoyée" vers le relais externe.
-    if (severity >= 3 && Math.random() < 0.55) {
-      queueAlert(rep.id, rnd(['Bureau Anti-Cybercrime — SNCT', 'Ligne Verte Nationale']));
-      if (Math.random() < 0.7) {
-        const a = store.listAlerts()[0];
-        if (a && a.status === 'queued') store.setAlertStatus(a.id, 'sent');
-      }
+    if (shouldAlert) {
+      const alert = queueAlert(rep.id, rnd(['Bureau Anti-Cybercrime — SNCT', 'Ligne Verte Nationale']));
+      if (Math.random() < 0.7) store.setAlertStatus(alert.id, 'sent');
     }
   }
 
-  console.log(`✔ Jeu de démonstration prêt : ${store.count()} signalements anonymes (moteur ${store.engine}).`);
+  console.log(`Jeu de démonstration prêt : ${store.count()} signalements anonymes (moteur ${store.engine}).`);
   console.log('  Démarre l’API avec : npm run dev   (dans server/)');
 }
 

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PublicHeader from '../components/PublicHeader.jsx';
+import Icon from '../components/Icon.jsx';
 import { INCIDENT_TYPES, PLATFORMS, REGIONS } from '../data/reference.js';
 import { api } from '../lib/api.js';
 
@@ -19,13 +20,19 @@ export default function Report() {
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
 
-  const doneCount = (types.size ? 1 : 0) + (note.trim().length ? 1 : 0) + (platforms.size ? 1 : 0) + (region ? 1 : 0);
-  const remaining = 4 - doneCount;
+  // Seules deux étapes sont obligatoires (types + région) : le récit et les
+  // plateformes restent facultatifs. La progression doit refléter cela.
+  const requiredDone = (types.size ? 1 : 0) + (region ? 1 : 0);
+  const remaining = 2 - requiredDone;
   const piiSpotted = useMemo(
     () => (PII_PHONE.test(note) || PII_MAIL.test(note) ? true : false),
     [note]
   );
-  const canSend = doneCount >= 3 && types.size > 0 && region && !sending;
+  const canSend = types.size > 0 && Boolean(region) && !sending;
+  const missing = [
+    !types.size ? 'le type de situation' : null,
+    !region ? 'ta région' : null,
+  ].filter(Boolean);
 
   const toggle = (set, val, setter) => {
     const next = new Set(set);
@@ -54,6 +61,16 @@ export default function Report() {
     }
   }
 
+  function startOver() {
+    setResult(null);
+    setTypes(new Set());
+    setPlatforms(new Set());
+    setRegion('');
+    setNote('');
+    setError(null);
+    window.scrollTo({ top: 0 });
+  }
+
   // ── Écran de confirmation (aucune donnée conservée en local) ──
   if (result) {
     return (
@@ -62,9 +79,9 @@ export default function Report() {
         <main className="mx-auto max-w-2xl px-4 py-10">
           <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-brand-100 sm:p-8">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              <Icon name="check" size={26} strokeWidth={2.5} className="text-green-700" />
             </div>
-            <h1 className="text-center text-2xl font-bold text-brand-800">Signal envoyé, anonymement 🛡️</h1>
+            <h1 className="text-center text-2xl font-bold text-brand-800">Signal envoyé, anonymement</h1>
             <p className="mt-2 text-center text-ink/70">
               Ton signalement est enregistré sans aucun nom, numéro, ni adresse.
               Il rejoint maintenant la carte des zones à risque pour protéger d'autres jeunes.
@@ -85,17 +102,20 @@ export default function Report() {
               </div>
             </dl>
 
-            <p className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200">
-              ⚠️ {result.hint}
+            <p className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200">
+              <Icon name="alert" size={16} className="mt-0.5 shrink-0 text-amber-700" />
+              <span>{result.hint}</span>
             </p>
 
             <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-              <Link to="/confort" className="flex-1 rounded-xl bg-brand-700 px-4 py-3 text-center font-semibold text-white hover:bg-brand-800">
-                Prendre un moment pour toi →
+              <Link to="/confort" className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 py-3 text-center font-semibold text-white hover:bg-brand-800">
+                Prendre un moment pour toi
+                <Icon name="arrowRight" size={16} />
               </Link>
-              <Link to="/" className="rounded-xl bg-white px-4 py-3 text-center font-semibold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50">
+              <button type="button" onClick={startOver}
+                className="rounded-xl bg-white px-4 py-3 text-center font-semibold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50">
                 Nouveau signalement
-              </Link>
+              </button>
             </div>
             <p className="mt-4 text-center text-xs text-ink/50">
               Rien n'a été enregistré sur ce téléphone : effacer ton historique n'est pas nécessaire.
@@ -113,11 +133,25 @@ export default function Report() {
       <main className="mx-auto max-w-6xl px-4 pb-28 pt-6 sm:pb-16">
         {/* Titre de page */}
         <div className="mb-6">
-          <p className="text-xs font-bold uppercase tracking-wider text-brand-500">Sécurisé · Anonyme</p>
-          <h1 className="text-2xl font-bold text-brand-800 sm:text-3xl">Signalisation Sécurisée</h1>
+          <p className="text-xs font-bold uppercase tracking-wider text-brand-500">Anonyme · Sans compte · Sans trace</p>
+          <h1 className="text-2xl font-bold text-brand-800 sm:text-3xl">Signale ce qui t'arrive</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-ink/70">
-            Utilisez ce formulaire sécurisé pour signaler ce que vous vivez ou avez vu. Il n'y a pas de mauvais mot — parler est déjà un grand pas. Le formulaire est pensé pour tout le monde, dès 12 ans, et ne recueille rien de personnel : ni nom, ni e-mail, ni téléphone, ni géolocalisation.
+            Ce formulaire est pour toi, au lycée ou en dehors. Raconte ce que tu vis ou ce que tu as vu :
+            il n'y a pas de bonne ou de mauvaise réponse, et parler est déjà un grand pas.
+            On ne te demande ni ton nom, ni ton e-mail, ni ton numéro, ni où tu te trouves.
           </p>
+          <p className="mt-2 max-w-3xl text-xs leading-relaxed text-ink/55">
+            <span className="font-semibold text-brand-700">Des exemples ?</span> Insultes dans le groupe de classe,
+            photo partagée sans ton accord, faux compte à ton nom, menaces pour obtenir une photo…
+          </p>
+        </div>
+
+        {/* Progression mobile : le panneau latéral est en bas sur téléphone. */}
+        <div className="mb-4 flex items-center gap-3 rounded-xl bg-white p-3 ring-1 ring-brand-100 lg:hidden">
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-brand-100">
+            <div className="h-full rounded-full bg-brand-700 transition-all" style={{ width: `${(requiredDone / 2) * 100}%` }} />
+          </div>
+          <span className="shrink-0 text-xs font-semibold text-brand-700">{requiredDone}/2 obligatoires</span>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
@@ -129,11 +163,11 @@ export default function Report() {
               <div className="mb-1 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-brand-800">
                   <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-lg bg-brand-700 text-sm text-white">01</span>
-                  Qu'est-ce qui vous arrive ?
+                  Qu'est-ce qui t'arrive ?
                 </h2>
-                <span className="text-xs font-medium text-ink/50">Sélection unique ou multiple</span>
+                <span className="text-xs font-medium text-ink/50">Obligatoire · plusieurs choix possibles</span>
               </div>
-              <p className="mb-4 ml-9 text-xs text-ink/50">Cochez tout ce qui se rapproche de votre situation.</p>
+              <p className="mb-4 ml-9 text-xs text-ink/50">Coche tout ce qui ressemble à ta situation.</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {INCIDENT_TYPES.map((t) => (
                   <label key={t.id}
@@ -145,7 +179,7 @@ export default function Report() {
                   </label>
                 ))}
               </div>
-              {types.size === 0 && <p className="mt-2 ml-9 text-xs text-red-600">* Cette étape est obligatoire.</p>}
+              {types.size === 0 && <p className="mt-2 ml-9 text-xs text-red-600">* Choisis au moins une case pour continuer.</p>}
             </fieldset>
 
             {/* ÉTAPE 2 — se vider */}
@@ -156,11 +190,14 @@ export default function Report() {
                 Se vider
                 <span className="ml-2 text-xs font-medium text-ink/50">Facultatif</span>
               </h2>
-              <p className="mb-3 ml-9 text-xs text-ink/50">Écrivez ici votre histoire, à votre façon — sans mot obligatoire.</p>
+              <p className="mb-3 ml-9 text-xs text-ink/50">Écris ici ton histoire, comme tu veux — aucun mot n'est obligatoire.</p>
 
-              <div className="rounded-xl bg-amber-50 p-3 text-xs leading-relaxed text-amber-900 ring-1 ring-amber-200">
-                ⚠️ Pour votre sécurité, <strong>n'indiquez pas de nom, ni d'adresse, ni d'école / université, ni d'identifiants personnels</strong> (téléphone, e-mail, mot de passe, etc.).
-                Nous n'avons besoin que de ce que vous ressentez.
+              <div className="flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-xs leading-relaxed text-amber-900 ring-1 ring-amber-200">
+                <Icon name="alert" size={15} className="mt-0.5 shrink-0 text-amber-700" />
+                <span>
+                  Pour ta sécurité, <strong>n'indique pas ton nom, ton adresse, ton lycée, ni tes identifiants personnels</strong> (téléphone, e-mail, mot de passe, etc.).
+                  On a seulement besoin de ce que tu ressens.
+                </span>
               </div>
 
               <textarea
@@ -172,7 +209,10 @@ export default function Report() {
                 className="mt-3 w-full resize-y rounded-xl border border-brand-100 p-3 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-200"
               />
               <div className="flex items-center justify-between text-xs text-ink/50">
-                <span>{piiSpotted ? '💡 petit conseil : un numéro ou un e-mail semble présent — tu peux le retirer, tu n\'as rien à prouver.' : 'Ton récit est chiffré avant d\'être stocké.'}</span>
+                <span className="flex items-center gap-1.5">
+                  {piiSpotted && <Icon name="lightbulb" size={13} className="shrink-0 text-amber-600" />}
+                  {piiSpotted ? 'Petit conseil : un numéro ou un e-mail semble présent — tu peux le retirer, tu n\'as rien à prouver.' : 'Ton récit est chiffré avant d\'être stocké.'}
+                </span>
                 <span>{note.length} / {MAX_NOTE}</span>
               </div>
             </fieldset>
@@ -183,9 +223,9 @@ export default function Report() {
               <div className="mb-1 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-brand-800">
                   <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-lg bg-brand-700 text-sm text-white">03</span>
-                  Sur quelle plateforme ?
+                  C'est arrivé sur quelle plateforme ?
                 </h2>
-                <span className="text-xs font-medium text-ink/50">Sélection multiple</span>
+                <span className="text-xs font-medium text-ink/50">Facultatif · plusieurs choix possibles</span>
               </div>
               <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
                 {PLATFORMS.map((p) => (
@@ -198,6 +238,7 @@ export default function Report() {
                   </label>
                 ))}
               </div>
+              <p className="mt-2 text-xs text-ink/50">Tu ne sais pas, ou tu préfères ne pas le dire ? Tu peux laisser vide.</p>
             </fieldset>
 
             {/* ÉTAPE 4 — région */}
@@ -206,9 +247,9 @@ export default function Report() {
               <div className="mb-1 flex items-center justify-between">
                 <h2 className="text-lg font-bold text-brand-800">
                   <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-lg bg-brand-700 text-sm text-white">04</span>
-                  Dans quelle région ?
+                  Tu es dans quelle région ?
                 </h2>
-                <span className="text-xs font-medium text-ink/50">Sélection unique</span>
+                <span className="text-xs font-medium text-ink/50">Obligatoire · un seul choix</span>
               </div>
               <select
                 value={region}
@@ -218,34 +259,62 @@ export default function Report() {
                 <option value="">Choisir une région…</option>
                 {REGIONS.map((r) => <option key={r.name} value={r.name}>{r.name}</option>)}
               </select>
+              {!region && <p className="mt-2 text-xs text-red-600">* Choisis une région pour continuer.</p>}
               <p className="mt-2 text-xs text-ink/50">
-                La région sert uniquement à cartographier les zones à risque — jamais pour te localiser.
+                La région sert seulement à voir où les jeunes ont besoin d'aide — jamais à te localiser.
               </p>
             </fieldset>
 
             {/* Envoi */}
             <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-100">
               <ul className="mb-4 grid gap-1.5 text-xs text-ink/60">
-                <li>📤 Aucune conservation de l'adresse : ton signalement est envoyé puis plus rien ne reste sur cet appareil.</li>
-                <li>🔒 Pas de nom ni d'e-mail demandé, pas de géolocalisation.</li>
-                <li>🛡️ Ton texte est chiffré (AES-256) et isolé des autres réponses.</li>
-                <li>🗣️ Écris en malagasy ou en français, comme tu veux.</li>
+                <li className="flex items-start gap-2">
+                  <Icon name="send" size={14} className="mt-0.5 shrink-0 text-brand-600" />
+                  <span>Aucune conservation de l'adresse : ton signalement est envoyé puis plus rien ne reste sur cet appareil.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Icon name="lock" size={14} className="mt-0.5 shrink-0 text-brand-600" />
+                  <span>Pas de nom ni d'e-mail demandé, pas de géolocalisation.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Icon name="shield" size={14} className="mt-0.5 shrink-0 text-brand-600" />
+                  <span>Ton texte est chiffré (AES-256) et isolé des autres réponses.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Icon name="message" size={14} className="mt-0.5 shrink-0 text-brand-600" />
+                  <span>Écris en malagasy ou en français, comme tu veux.</span>
+                </li>
               </ul>
               {error && <p className="mb-3 rounded-lg bg-red-50 p-2.5 text-sm text-red-700 ring-1 ring-red-200">{error}</p>}
+              {!canSend && !sending && missing.length > 0 && (
+                <p className="mb-2 text-sm font-semibold text-brand-700">
+                  Il manque encore : {missing.join(' et ')}.
+                </p>
+              )}
               <button type="button" onClick={submit} disabled={!canSend}
                 className={'flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-base font-bold transition '
                   + (canSend ? 'bg-brand-700 text-white hover:bg-brand-800' : 'cursor-not-allowed bg-brand-100 text-brand-700/50')}>
-                {sending ? 'Envoi sécurisé…' : '✈ Envoyer de façon anonyme et sécurisée'}
+                <Icon name={sending ? 'refresh' : 'send'} size={16} className={sending ? 'animate-spin' : ''} />
+                {sending ? 'Envoi sécurisé…' : 'Envoyer mon signalement (anonyme)'}
               </button>
-              <p className="mt-2 text-center text-xs text-ink/50">En envoyant, tu acceptes que ces infos techniques servent à protéger d'autres jeunes.</p>
+              <p className="mt-2 text-center text-xs text-ink/50">En envoyant, tu aides à mieux protéger les jeunes de ta région. Rien de personnel n'est conservé.</p>
             </div>
           </div>
 
           {/* ─────────── Colonne droite : aide pendant le remplissage ─────────── */}
           <aside className="space-y-3 lg:sticky lg:top-20 lg:self-start">
             <div className="rounded-2xl bg-brand-700 p-4 text-white shadow-sm">
-              <p className="text-2xl font-bold">{remaining === 0 ? '🎉' : remaining}</p>
-              <p className="text-sm text-brand-100">{remaining === 0 ? 'Tu peux envoyer maintenant' : `étape${remaining > 1 ? 's' : ''} avant envoi`}</p>
+              <p className="flex h-8 items-center text-2xl font-bold">
+                {remaining === 0 ? <Icon name="checkCircle" size={26} strokeWidth={2.5} /> : remaining}
+              </p>
+              <p className="text-sm text-brand-100">
+                {remaining === 0
+                  ? 'Tu peux envoyer maintenant'
+                  : `étape${remaining > 1 ? 's' : ''} obligatoire${remaining > 1 ? 's' : ''} restante${remaining > 1 ? 's' : ''}`}
+              </p>
+              <p className="mt-1 text-[11px] text-brand-100/70">
+                Le récit et les plateformes sont facultatifs.
+              </p>
               <ul className="mt-3 space-y-1.5 text-xs text-brand-100/90">
                 <li>· Téléphone partagé ? Pense à fermer l'onglet après l'envoi, ou appuie sur « Quitter ».</li>
                 <li>· Rien n'est installé sur cet appareil, ni suivi à distance.</li>
@@ -268,8 +337,9 @@ export default function Report() {
               <p className="mt-1 text-xs leading-relaxed text-amber-900/80">
                 Si tout se bouscule en toi, c'est normal : l'écran Confort est un espace calme, rien que pour toi — à ton rythme.
               </p>
-              <Link to="/confort" className="mt-2 inline-block text-xs font-bold text-brand-700 underline underline-offset-2">
-                Confort &amp; retour au calme →
+              <Link to="/confort" className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-brand-700 underline underline-offset-2">
+                Confort &amp; retour au calme
+                <Icon name="arrowRight" size={12} />
               </Link>
             </div>
           </aside>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo.jsx';
+import Icon from '../components/Icon.jsx';
 import QuickExit from '../components/QuickExit.jsx';
 import { api } from '../lib/api.js';
 
@@ -52,7 +53,10 @@ export default function AdminLogin() {
       <main className="flex flex-1 items-center justify-center px-4 py-8">
         <div className="w-full max-w-md">
           <form onSubmit={submit} className="rounded-3xl bg-white p-6 shadow-xl sm:p-8">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-brand-500">🔒 Accès restreint</p>
+            <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-brand-500">
+              <Icon name="lock" size={12} />
+              Accès restreint
+            </p>
             <h1 className="mt-1 text-2xl font-bold text-ink">Espace Administrateur</h1>
             <p className="mt-1 text-sm text-ink/60">
               Cet espace gère les signalements anonymisés uniquement, pour éviter tout risque d'identification ARO.
@@ -79,8 +83,9 @@ export default function AdminLogin() {
                     className="w-full bg-transparent py-2.5 text-sm outline-none"
                   />
                   <button type="button" onClick={() => setShow(!show)}
-                    className="ml-2 shrink-0 text-xs font-semibold text-brand-700 underline-offset-2 hover:underline">
-                    {show ? 'Masquer' : '👁 Afficher'}
+                    className="ml-2 flex shrink-0 items-center gap-1 text-xs font-semibold text-brand-700 underline-offset-2 hover:underline">
+                    {!show && <Icon name="eye" size={13} />}
+                    {show ? 'Masquer' : 'Afficher'}
                   </button>
                 </span>
               </label>
@@ -90,12 +95,18 @@ export default function AdminLogin() {
               )}
 
               <button type="submit" disabled={loading}
-                className="w-full rounded-xl bg-brand-700 px-4 py-3 text-base font-bold text-white transition hover:bg-brand-800 disabled:opacity-60">
-                {loading ? 'Connexion…' : 'Se connecter →'}
+                className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-700 px-4 py-3 text-base font-bold text-white transition hover:bg-brand-800 disabled:opacity-60">
+                {loading ? 'Connexion…' : (
+                  <>
+                    Se connecter
+                    <Icon name="arrowRight" size={16} />
+                  </>
+                )}
               </button>
 
-              <p className="rounded-xl bg-brand-50 p-3 text-xs leading-relaxed text-brand-800 ring-1 ring-brand-100">
-                ⚠️ Un souci d'accès ? Contactez l'administrateur technique via ce canal sécurisé.
+              <p className="flex items-start gap-1.5 rounded-xl bg-brand-50 p-3 text-xs leading-relaxed text-brand-800 ring-1 ring-brand-100">
+                <Icon name="alert" size={13} className="mt-0.5 shrink-0" />
+                <span>Un souci d'accès ? Contactez l'administrateur technique via ce canal sécurisé.</span>
               </p>
 
               <p className="text-center text-xs text-ink/50">
@@ -104,13 +115,22 @@ export default function AdminLogin() {
             </div>
           </form>
 
-          <p className="mt-5 text-center text-sm text-brand-100">
-            <Link to="/confort" className="underline underline-offset-2 hover:text-white">← Retour à l'aide &amp; réconfort</Link>
-          </p>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-brand-100">
+            <Link to="/" className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-white">
+              <Icon name="arrowLeft" size={13} />
+              Retour à l'accueil
+            </Link>
+            <Link to="/confort" className="underline underline-offset-2 hover:text-white">
+              Aide &amp; réconfort
+            </Link>
+          </div>
 
-          <div className="mt-5 rounded-xl bg-amber-100/95 p-3 text-xs leading-relaxed text-amber-900 ring-1 ring-amber-300">
-            ⚠️ Environnement réel — données anonymisées. Aucune navigation directe
-            à partir de cette console : toute navigation internet s'effectue hors de cet espace.
+          <div className="mt-5 flex items-start gap-1.5 rounded-xl bg-amber-100/95 p-3 text-xs leading-relaxed text-amber-900 ring-1 ring-amber-300">
+            <Icon name="alert" size={13} className="mt-0.5 shrink-0" />
+            <span>
+              Environnement réel — données anonymisées. Aucune navigation directe
+              à partir de cette console : toute navigation internet s'effectue hors de cet espace.
+            </span>
           </div>
         </div>
       </main>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Icon from '../components/Icon.jsx';
 import { api } from '../lib/api.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -27,8 +28,9 @@ export default function Parametres() {
   }, []);
 
   async function copyPath() {
+    if (!db?.hostPath) return;
     try {
-      await navigator.clipboard.writeText(db?.hostPath || 'C:\\Risk\\server\\data\\aro.sqlite');
+      await navigator.clipboard.writeText(db.hostPath);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch { /* presse-papiers indisponible */ }
@@ -60,7 +62,10 @@ export default function Parametres() {
       {/* Base de données : emplacement réel + sauvegarde */}
       <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-100">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-bold text-ink">🗄️ Base de données — où est-elle ?</h2>
+          <h2 className="flex items-center gap-2 text-lg font-bold text-ink">
+            <Icon name="database" size={18} className="text-brand-600" />
+            Base de données — où est-elle ?
+          </h2>
           <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-700 ring-1 ring-brand-100">
             moteur : {db?.engine ?? '…'}
           </span>
@@ -72,11 +77,21 @@ export default function Parametres() {
         <div className="mt-3 rounded-xl bg-ink/[0.04] p-3">
           <p className="text-[11px] font-bold uppercase tracking-wide text-ink/50">Chemin sur ton ordinateur</p>
           <code className="mt-1 block break-all font-mono text-sm font-bold text-brand-800">
-            {db?.hostPath ?? 'C:\\Risk\\server\\data\\aro.sqlite'}
+            {db?.hostPath ?? '…'}
           </code>
-          <p className="mt-1 text-[11px] text-ink/50">
-            Clé de chiffrement : <span className="font-mono">{db?.keyHostPath ?? 'C:\\Risk\\server\\data\\.textkey'}</span>
-            {db && (db.keyExists ? ' ✅ présente' : ' ⚠️ absente')}
+          <p className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-ink/50">
+            <span>Clé de chiffrement : <span className="font-mono">{db?.keyHostPath ?? '…'}</span></span>
+            {db && (db.keyExists ? (
+              <span className="inline-flex items-center gap-0.5 text-green-700">
+                <Icon name="check" size={12} />
+                présente
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-0.5 text-red-600">
+                <Icon name="alert" size={12} />
+                absente
+              </span>
+            ))}
           </p>
           {db?.inDocker && (
             <p className="mt-1 text-[11px] text-ink/50">
@@ -104,19 +119,29 @@ export default function Parametres() {
 
         <div className="mt-3 flex flex-wrap gap-2">
           <a href="/api/admin/db-backup" download
-             className="rounded-full bg-brand-700 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800">
-            ⬇️ Télécharger une copie
+             className="flex items-center gap-1.5 rounded-full bg-brand-700 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800">
+            <Icon name="download" size={15} />
+            Télécharger une copie
           </a>
           <button type="button" onClick={copyPath}
-            className="rounded-full bg-brand-50 px-4 py-2 text-sm font-bold text-brand-700 ring-1 ring-brand-100 hover:bg-brand-100">
-            {copied ? '✓ Chemin copié' : '📋 Copier le chemin'}
+            className="flex items-center gap-1.5 rounded-full bg-brand-50 px-4 py-2 text-sm font-bold text-brand-700 ring-1 ring-brand-100 hover:bg-brand-100">
+            <Icon name={copied ? 'check' : 'copy'} size={15} />
+            {copied ? 'Chemin copié' : 'Copier le chemin'}
           </button>
         </div>
-        <p className="mt-2 text-[11px] leading-relaxed text-ink/50">
-          Astuce Windows : appuie sur <kbd className="rounded bg-white px-1 ring-1 ring-brand-100">Win + R</kbd>,
-          colle <span className="font-mono">C:\Risk\server\data</span> et valide — le dossier s'ouvre dans l'Explorateur.
-          Le fichier <span className="font-mono">.textkey</span> est masqué par Windows : active « Éléments masqués ».
-        </p>
+        {db?.platform === 'win32' ? (
+          <p className="mt-2 text-[11px] leading-relaxed text-ink/50">
+            Astuce Windows : appuie sur <kbd className="rounded bg-white px-1 ring-1 ring-brand-100">Win + R</kbd>,
+            colle <span className="font-mono">{db?.hostDataDir ?? '…'}</span> et valide — le dossier s'ouvre dans l'Explorateur.
+            Le fichier <span className="font-mono">.textkey</span> est masqué par Windows : active « Éléments masqués ».
+          </p>
+        ) : (
+          <p className="mt-2 text-[11px] leading-relaxed text-ink/50">
+            Astuce : ouvre ce dossier dans ton gestionnaire de fichiers, ou lance
+            <span className="ml-1 font-mono">xdg-open {db?.hostDataDir ?? '…'}</span>.
+            Le fichier <span className="font-mono">.textkey</span> est un fichier caché (Ctrl+H).
+          </p>
+        )}
       </section>
 
       {/* Rétention & purge */}
@@ -150,8 +175,9 @@ export default function Parametres() {
             {busy === 'seed' ? 'Régénération…' : 'Régénérer la démo'}
           </button>
           <a href="/api/admin/export" download="aro-anonyme.csv" target="_blank" rel="noreferrer"
-             className="rounded-full bg-brand-50 px-4 py-1.5 text-sm font-bold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-100">
-            ⤓ Export CSV (anonyme)
+             className="flex items-center gap-1.5 rounded-full bg-brand-50 px-4 py-1.5 text-sm font-bold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-100">
+            <Icon name="download" size={14} />
+            Export CSV (anonyme)
           </a>
         </div>
       </section>
@@ -162,7 +188,7 @@ export default function Parametres() {
         <ul className="mt-2 space-y-1.5 text-sm text-ink/75">
           {ANON_MEASURES.map((m) => (
             <li key={m} className="flex gap-2">
-              <span className="mt-0.5 shrink-0 text-green-600">✔</span>
+              <Icon name="check" size={14} className="mt-0.5 shrink-0 text-green-600" />
               <span>{m}</span>
             </li>
           ))}
@@ -176,10 +202,22 @@ export default function Parametres() {
       <section className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-brand-100">
         <h2 className="text-lg font-bold text-ink">Relais externes (alertes)</h2>
         <ul className="mt-2 space-y-1.5 text-sm text-ink/75">
-          <li>🔁 <strong>Escalade automatique</strong> — cas « gravité ≥ 3 » (chantage, sextorsion, revenge porn + seconde catégorie).</li>
-          <li>📮 <strong>Destinataires simulés</strong> — Bureau Anti-Cybercrime — SNCT · Ligne Verte Nationale (prototype : envoi mocké).</li>
-          <li>🔍 <strong>Vérificabilité</strong> — <code className="font-mono text-xs">GET /api/admin/alerts/:id/status</code> donne l'état exact de transmission.</li>
-          <li>🚫 <strong>Aucune donnée personnelle</strong> n'accompagne une alerte : région + type + gravité uniquement.</li>
+          <li className="flex items-start gap-2">
+            <Icon name="refresh" size={14} className="mt-0.5 shrink-0 text-brand-600" />
+            <span><strong>Escalade automatique</strong> — cas « gravité ≥ 3 » (chantage, sextorsion, revenge porn + seconde catégorie).</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <Icon name="send" size={14} className="mt-0.5 shrink-0 text-brand-600" />
+            <span><strong>Destinataires simulés</strong> — Bureau Anti-Cybercrime — SNCT · Ligne Verte Nationale (prototype : envoi mocké).</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <Icon name="search" size={14} className="mt-0.5 shrink-0 text-brand-600" />
+            <span><strong>Vérificabilité</strong> — <code className="font-mono text-xs">GET /api/admin/alerts/:id/status</code> donne l'état exact de transmission.</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <Icon name="ban" size={14} className="mt-0.5 shrink-0 text-brand-600" />
+            <span><strong>Aucune donnée personnelle</strong> n'accompagne une alerte : région + type + gravité uniquement.</span>
+          </li>
         </ul>
       </section>
     </div>

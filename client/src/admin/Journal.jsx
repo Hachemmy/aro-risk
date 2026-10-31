@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import Icon from '../components/Icon.jsx';
 import { api } from '../lib/api.js';
-import { REGIONS, THREAT_COLORS, LEVEL_OF } from '../data/reference.js';
+import { REGIONS, THREAT_COLORS, LEVEL_OF, typeLabel } from '../data/reference.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Onglet 2 — Journal des incidents.
@@ -8,17 +9,6 @@ import { REGIONS, THREAT_COLORS, LEVEL_OF } from '../data/reference.js';
 // Le récit chiffré de la victime est déchiffré UNIQUEMENT à la demande, et le
 // module de suivi des alertes externes (transmission) est intégré.
 // ─────────────────────────────────────────────────────────────────────────────
-
-const TYPE_LABELS = {
-  'revenge-porn': 'Revenge porn',
-  'doxing': 'Doxing',
-  'lynchage': 'Lynchage de meute',
-  'menaces': 'Harcèlement textuel',
-  'usurpation': "Usurpation d'identité",
-  'humiliation': 'Humiliation publique',
-  'chantage': 'Chantage / Sextorsion',
-  'exclusion': 'Exclusion ciblée',
-};
 
 function sevBadge(s) {
   if (s >= 3) return { t: 'Haute', cls: 'bg-red-50 text-red-700 ring-red-200' };
@@ -80,7 +70,7 @@ export default function Journal() {
       const d = await api.admin(`/reports/${r.id}/note`);
       setNote(d.note);
     } catch {
-      setNote('⚠️ Récit non lisible (chiffrement scellé). Patientez ou vérifiez la clé serveur.');
+      setNote('Récit non lisible (chiffrement scellé). Patientez ou vérifiez la clé serveur.');
     } finally {
       setNoteLoading(false);
     }
@@ -119,15 +109,17 @@ export default function Journal() {
                 <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ring-1 ${sevBadge(sel.severity).cls}`}>
                   {sevBadge(sel.severity).t}
                 </span>
-                <span className={sel.hasNote ? 'text-xs font-semibold text-brand-600' : 'text-xs text-ink/40'}>
-                  {sel.hasNote ? '🔒 Récit chiffré disponible' : 'Aucun récit'}
+                <span className={sel.hasNote ? 'inline-flex items-center gap-1 text-xs font-semibold text-brand-600' : 'text-xs text-ink/40'}>
+                  {sel.hasNote && <Icon name="lock" size={12} />}
+                  {sel.hasNote ? 'Récit chiffré disponible' : 'Aucun récit'}
                 </span>
               </div>
               <p className="mt-1 text-xs text-ink/50">Horodatage : {new Date(sel.createdAt).toLocaleString('fr-FR')}</p>
             </div>
             <button type="button" onClick={() => { setSel(null); setNote(null); }}
-              className="rounded-full bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-100">
-              ← Retour / Fermer
+              className="flex items-center gap-1 rounded-full bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-100">
+              <Icon name="arrowLeft" size={12} />
+              Retour / Fermer
             </button>
           </div>
 
@@ -142,7 +134,7 @@ export default function Journal() {
             </div>
             <div className="rounded-xl bg-brand-50 p-3 ring-1 ring-brand-100">
               <dt className="text-xs font-semibold text-brand-700">Types cochés</dt>
-              <dd className="text-ink">{sel.types.map((t) => TYPE_LABELS[t] ?? t).join(' · ')}</dd>
+              <dd className="text-ink">{sel.types.map((t) => typeLabel(t)).join(' · ')}</dd>
             </div>
           </dl>
 
@@ -160,8 +152,9 @@ export default function Journal() {
                 ? 'Déchiffrement en cours…'
                 : (note ? note : 'Aucun récit conservé pour ce signalement.')}
             </div>
-            <p className="mt-2 text-xs text-ink/50">
-              ⚠️ Ne tentez pas de contacter la victime : c'est elle qui choisit une structure via l'annuaire. Conservez l'information pour l'action de prévention par région.
+            <p className="mt-2 flex items-start gap-1.5 text-xs text-ink/50">
+              <Icon name="alert" size={13} className="mt-0.5 shrink-0" />
+              <span>Ne tentez pas de contacter la victime : c'est elle qui choisit une structure via l'annuaire. Conservez l'information pour l'action de prévention par région.</span>
             </p>
           </div>
 
@@ -169,10 +162,20 @@ export default function Journal() {
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl bg-brand-50 p-3 text-sm ring-1 ring-brand-100">
               <p className="text-xs font-semibold text-brand-700">Statut alerte externe</p>
-              <p className="mt-1 text-ink">
-                {sel.alertStatus === 'sent' ? '✅ Transmise — état vérifiable via /admin/alerts/:id/status'
-                : sel.alertStatus === 'queued' ? '🟠 En file d\'envoi'
-                : '— Sans objet (cas non grave)'}
+              <p className="mt-1 flex items-center gap-1.5 text-ink">
+                {sel.alertStatus === 'sent' ? (
+                  <>
+                    <Icon name="checkCircle" size={14} className="shrink-0 text-green-600" />
+                    <span>Transmise — état vérifiable via /admin/alerts/:id/status</span>
+                  </>
+                ) : sel.alertStatus === 'queued' ? (
+                  <>
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-orange-500" />
+                    <span>En file d'envoi</span>
+                  </>
+                ) : (
+                  <span>— Sans objet (cas non grave)</span>
+                )}
               </p>
               {(alertsByReport.get(sel.id) || sel.alertStatus === 'queued') && (
                 <button type="button" onClick={() => dispatchFor(sel.id)} disabled={dispatching}
@@ -208,8 +211,9 @@ export default function Journal() {
               <option value="sent">Transmise</option>
             </select>
             <span className="ml-auto text-xs text-ink/50">{filtered.length} signalement(s) anonymisé(s)</span>
-            <button type="button" onClick={load} className="rounded-full bg-brand-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-brand-800">
-              ↻ Actualiser
+            <button type="button" onClick={load} className="flex items-center gap-1.5 rounded-full bg-brand-700 px-3 py-1.5 text-xs font-bold text-white hover:bg-brand-800">
+              <Icon name="refresh" size={13} />
+              Actualiser
             </button>
           </div>
 
@@ -253,7 +257,7 @@ export default function Journal() {
                           </span>
                         </td>
                         <td className="px-4 py-2.5 text-xs text-ink/70">
-                          {r.types.map((t) => TYPE_LABELS[t] ?? t).slice(0, 2).join(', ')}
+                          {r.types.map((t) => typeLabel(t)).slice(0, 2).join(', ')}
                           {r.types.length > 2 ? ` +${r.types.length - 2}` : ''}
                         </td>
                         <td className="px-4 py-2.5 text-xs text-ink/70">{r.platforms.join(', ') || '—'}</td>
@@ -266,7 +270,12 @@ export default function Journal() {
                           {r.alertStatus === 'none' && <span className="text-ink/40">—</span>}
                         </td>
                         <td className="px-4 py-2.5 text-xs">
-                          {r.hasNote ? <span className="font-semibold text-brand-700">🔒 Consulter</span> : <span className="text-ink/40">Aucun récit</span>}
+                          {r.hasNote ? (
+                            <span className="inline-flex items-center gap-1 font-semibold text-brand-700">
+                              <Icon name="lock" size={12} />
+                              Consulter
+                            </span>
+                          ) : <span className="text-ink/40">Aucun récit</span>}
                         </td>
                       </tr>
                     );
