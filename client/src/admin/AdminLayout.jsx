@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import Logo from '../components/Logo.jsx';
-import Icon from '../components/Icon.jsx';
 import QuickExit from '../components/QuickExit.jsx';
 import { api } from '../lib/api.js';
 
@@ -54,15 +53,8 @@ export default function AdminLayout() {
               </NavLink>
             ))}
           </nav>
-          <div className="mx-5 mt-8 flex items-start gap-2 rounded-xl bg-brand-900/70 p-3 text-[11px] leading-relaxed text-brand-100 ring-1 ring-white/10">
-            <Icon name="lock" size={13} className="mt-0.5 shrink-0" />
-            <span>Anonymat garanti : cette console n'agrège que des données techniques. Aucun nom, adresse IP, e-mail ou géoloc n'arrive au serveur.</span>
-          </div>
         </div>
-        <div className="p-5 text-[11px] text-brand-300">
-          Console v1 · Madagascar
-          <p className="mt-1 text-brand-400/70">Anonymat garanti — rien de personnel n'est stocké</p>
-        </div>
+        <div />
       </aside>
 
       {/* ── Contenu ── */}
